@@ -87,8 +87,10 @@ MODULE_EXPLANATIONS = {
 
 def level_score(value):
     mapping = {
-        "낮음": 0.0,
+        "없음": 0.0,
+        "낮음": 0.25,
         "보통": 0.5,
+        "중간": 0.5,
         "높음": 1.0
     }
     return mapping.get(value, 0.0)
@@ -125,7 +127,7 @@ def marital_score(value):
     mapping = {
         "미혼": 0.0,
         "기혼": 0.7,
-        "이혼·사별": 0.4
+        "사별 및 이혼": 0.4
     }
     return mapping.get(value, 0.0)
 
@@ -162,9 +164,9 @@ def age_transition_score(value):
 
 def leisure_need_score(value):
     mapping = {
-        "만족": 0.0,
+        "충분": 0.0,
         "보통": 0.5,
-        "불만족": 1.0
+        "부족": 1.0
     }
     return mapping.get(value, 0.0)
 
@@ -181,7 +183,7 @@ def avg(values):
 # =====================================================
 
 SERVICE_PROFILE = {
-    "가사": {
+    "가사·생활관리": {
         "반복": 1.0,
         "이동": 0.2,
         "공유": 0.6,
@@ -190,7 +192,7 @@ SERVICE_PROFILE = {
         "시간압박": 0.5,
         "피로": 0.6
     },
-    "육아": {
+    "육아·가족돌봄": {
         "반복": 1.0,
         "이동": 0.5,
         "공유": 1.0,
@@ -199,7 +201,7 @@ SERVICE_PROFILE = {
         "시간압박": 1.0,
         "피로": 0.8
     },
-    "건강관리": {
+    "건강·운동관리": {
         "반복": 1.0,
         "이동": 0.4,
         "공유": 0.6,
@@ -208,7 +210,7 @@ SERVICE_PROFILE = {
         "시간압박": 0.7,
         "피로": 0.7
     },
-    "학습": {
+    "학습·업무집중": {
         "반복": 0.7,
         "이동": 0.1,
         "공유": 0.2,
@@ -217,7 +219,7 @@ SERVICE_PROFILE = {
         "시간압박": 0.8,
         "피로": 0.6
     },
-    "이동": {
+    "이동·외출지원": {
         "반복": 0.2,
         "이동": 1.0,
         "공유": 0.2,
@@ -226,16 +228,7 @@ SERVICE_PROFILE = {
         "시간압박": 0.8,
         "피로": 0.4
     },
-    "웰니스": {
-        "반복": 0.6,
-        "이동": 0.3,
-        "공유": 0.2,
-        "대기": 0.8,
-        "전환": 0.3,
-        "시간압박": 0.3,
-        "피로": 0.8
-    },
-    "여가": {
+    "여가·문화추천": {
         "반복": 0.2,
         "이동": 0.4,
         "공유": 0.3,
@@ -243,12 +236,21 @@ SERVICE_PROFILE = {
         "전환": 0.4,
         "시간압박": 0.2,
         "피로": 0.5
+    },
+    "웰니스·휴식수면": {
+        "반복": 0.6,
+        "이동": 0.3,
+        "공유": 0.2,
+        "대기": 0.8,
+        "전환": 0.3,
+        "시간압박": 0.3,
+        "피로": 0.8
     }
 }
 
 
 # =====================================================
-# 3. 13개 입력조건 → 7개 생활지수 계산
+# 3. 입력조건 → 7개 생활지수 계산
 # =====================================================
 
 def calculate_life_indices(target):
@@ -400,7 +402,15 @@ st.sidebar.header("서비스 제공자 입력 조건")
 
 service_type = st.sidebar.selectbox(
     "서비스 분야",
-    ["가사", "육아", "건강관리", "학습", "이동", "웰니스", "여가"]
+    [
+        "가사·생활관리",
+        "육아·가족돌봄",
+        "건강·운동관리",
+        "학습·업무집중",
+        "이동·외출지원",
+        "여가·문화추천",
+        "웰니스·휴식수면"
+    ]
 )
 
 gender = st.sidebar.selectbox(
@@ -415,23 +425,43 @@ age_group = st.sidebar.selectbox(
 
 marital_status = st.sidebar.selectbox(
     "혼인 상태",
-    ["미혼", "기혼", "이혼·사별"]
+    ["미혼", "기혼", "사별 및 이혼"]
 )
 
-care_burden_level = st.sidebar.selectbox(
-    "돌봄 부담 수준",
-    ["낮음", "보통", "높음"]
-)
+# 혼인 상태에 따른 조건부 질문
+if marital_status == "기혼":
+    care_burden_level = st.sidebar.selectbox(
+        "가족 돌봄 부담(노부모 등)",
+        ["없음", "낮음", "중간", "높음"]
+    )
 
-child_care_need = st.sidebar.selectbox(
-    "자녀 돌봄 필요",
-    ["낮음", "보통", "높음"]
-)
+    child_care_need = st.sidebar.selectbox(
+        "영유아/학령기 자녀 유무",
+        ["없음", "낮음", "중간", "높음"]
+    )
 
-dual_income = st.sidebar.selectbox(
-    "맞벌이 여부",
-    ["해당 없음", "외벌이", "맞벌이"]
-)
+    dual_income = st.sidebar.selectbox(
+        "맞벌이 여부",
+        ["해당 없음", "외벌이", "맞벌이"]
+    )
+
+elif marital_status == "사별 및 이혼":
+    care_burden_level = st.sidebar.selectbox(
+        "돌봄 부담 수준",
+        ["없음", "낮음", "중간", "높음"]
+    )
+
+    child_care_need = st.sidebar.selectbox(
+        "자녀 돌봄 필요",
+        ["없음", "낮음", "중간", "높음"]
+    )
+
+    dual_income = "해당 없음"
+
+else:
+    care_burden_level = "없음"
+    child_care_need = "없음"
+    dual_income = "해당 없음"
 
 elderly_household = st.sidebar.selectbox(
     "고령자가구 여부",
@@ -454,13 +484,13 @@ time_pressure = st.sidebar.selectbox(
 )
 
 fatigue_level = st.sidebar.selectbox(
-    "피곤함 정도",
+    "피로 누적도",
     ["낮음", "보통", "높음"]
 )
 
 leisure_satisfaction = st.sidebar.selectbox(
-    "여가 만족도",
-    ["만족", "보통", "불만족"]
+    "여가 충족 상태",
+    ["충분", "보통", "부족"]
 )
 
 top_n = st.sidebar.selectbox(
@@ -485,11 +515,27 @@ target = {
     "leisure_satisfaction": leisure_satisfaction
 }
 
+display_target = {
+    "서비스 분야": service_type,
+    "성별": gender,
+    "연령대": age_group,
+    "혼인 상태": marital_status,
+    "가족 돌봄 부담/돌봄 부담 수준": care_burden_level,
+    "영유아·학령기 자녀/자녀 돌봄 필요": child_care_need,
+    "맞벌이 여부": dual_income,
+    "고령자가구 여부": elderly_household,
+    "일·학습 상태": work_study_status,
+    "근무 부담 수준": work_burden_level,
+    "시간 부족 정도": time_pressure,
+    "피로 누적도": fatigue_level,
+    "여가 충족 상태": leisure_satisfaction
+}
+
 if st.sidebar.button("모듈 추천 실행"):
     life_indices, module_scores, recommended = recommend_modules(target, top_n)
 
     st.subheader("1. 입력 조건 요약")
-    input_df = pd.DataFrame(target.items(), columns=["입력 항목", "선택값"])
+    input_df = pd.DataFrame(display_target.items(), columns=["입력 항목", "선택값"])
     st.table(input_df)
 
     st.info(
