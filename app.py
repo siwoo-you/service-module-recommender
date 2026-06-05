@@ -895,9 +895,10 @@ input_df = pd.DataFrame([
     ["직업군", job_group],
     ["경제활동 상태", economic_status],
     ["추천 모듈 개수", top_n],
-], columns=["입력 항목", "선택값"])
+], columns=["입력 항목", "선택값"]).astype(str)
 
 st.table(input_df)
+
 
 st.subheader("2. 타깃 고객군 추출 결과")
 
