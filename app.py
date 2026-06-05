@@ -331,8 +331,14 @@ def load_data(path=DATA_PATH):
             df = pd.read_csv(path, encoding="utf-8-sig", low_memory=False)
 
     df.columns = df.columns.str.strip()
-    return df
 
+    # Streamlit Cloud 실행 안정화를 위해 시연용 표본만 사용
+    MAX_ROWS = 30000
+
+    if len(df) > MAX_ROWS:
+        df = df.sample(n=MAX_ROWS, random_state=42).reset_index(drop=True)
+
+    return df
 
 def safe_numeric(x):
     return pd.to_numeric(x, errors="coerce")
