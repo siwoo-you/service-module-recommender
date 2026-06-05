@@ -1,3 +1,4 @@
+import zipfile
 import re
 import numpy as np
 import pandas as pd
@@ -308,10 +309,26 @@ DOMAIN_FOR_ENTROPY = [
 
 @st.cache_data
 def load_data(path=DATA_PATH):
-    try:
-        df = pd.read_csv(path, encoding="cp949", low_memory=False)
-    except UnicodeDecodeError:
-        df = pd.read_csv(path, encoding="utf-8-sig", low_memory=False)
+    if path.endswith(".zip"):
+        with zipfile.ZipFile(path, "r") as z:
+            csv_files = [f for f in z.namelist() if f.endswith(".csv")]
+
+            if len(csv_files) == 0:
+                raise FileNotFoundError("zip 파일 안에 CSV 파일이 없습니다.")
+
+            csv_name = csv_files[0]
+
+            with z.open(csv_name) as f:
+                try:
+                    df = pd.read_csv(f, encoding="cp949", low_memory=False)
+                except UnicodeDecodeError:
+                    f.seek(0)
+                    df = pd.read_csv(f, encoding="utf-8-sig", low_memory=False)
+    else:
+        try:
+            df = pd.read_csv(path, encoding="cp949", low_memory=False)
+        except UnicodeDecodeError:
+            df = pd.read_csv(path, encoding="utf-8-sig", low_memory=False)
 
     df.columns = df.columns.str.strip()
     return df
